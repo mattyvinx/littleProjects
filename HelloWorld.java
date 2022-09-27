@@ -34,7 +34,6 @@ public class HelloWorld {
       }
       System.out.println("");
 
-      //Just want to see something
       
    }
 
