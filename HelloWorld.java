@@ -36,8 +36,18 @@ public class HelloWorld {
       
    }
     public static int retrieveColumn(Scanner input){
-      System.out.println("Please give a row number: ");
-      int retrieved = input.nextInt();
+      int retrieved = -1;
+      while (retrieved == -1){
+         System.out.println("Please give a row number: ");
+         retrieved = input.nextInt();
+         if (retrieved<5 && retrieved>-1){
+            return retrieved;
+         }
+         else{
+            retrieved = -1;
+            System.out.println("Out of bounds, please try again.");
+         }
+      }
       return retrieved;
     }
  }
