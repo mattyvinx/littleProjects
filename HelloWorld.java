@@ -4,13 +4,22 @@ import java.util.*;
 public class HelloWorld {
     public static void main(String[] args) {
        // Prints "Hello, World" in the terminal window.
+       boolean winnerFound = false;
        Scanner scanny = new Scanner(System.in);
        String[][] row1 = new String[5][5];
        initBoard(row1);
        System.out.println("\nWelcome to Conenct 4! First to get 4 in a row wins :D\n\n");
        displayGameBoard(row1);
-       int columnDrop = retrieveColumn(scanny);
-       System.out.println("Dropping your piece in column #" + columnDrop);
+       while(!winnerFound){
+         int columnDrop = retrieveColumn(scanny);
+         System.out.println("Dropping your piece in column #" + columnDrop);
+         if (columnDrop == 3){
+            winnerFound = true;
+         }
+         
+      }
+
+      
 
        
        //System.out.printf("%-5s %-5s %-5s %-5s %-5s\n", row1[0], row1[1], row1[2], row1[3], row1[4]);
