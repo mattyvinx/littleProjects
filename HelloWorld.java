@@ -48,7 +48,14 @@ public class HelloWorld {
       int retrieved = -1;
       while (retrieved == -1){
          System.out.println("Please give a row number: ");
-         retrieved = input.nextInt();
+         if(input.hasNextInt()){
+            retrieved=input.nextInt();
+         }
+         else{
+            input.next();
+            System.out.println("Not a valid int, try again.");
+            continue;
+         }
          if (retrieved<5 && retrieved>-1){
             return retrieved;
          }
@@ -56,6 +63,7 @@ public class HelloWorld {
             retrieved = -1;
             System.out.println("Out of bounds, please try again.");
          }
+
       }
       return retrieved;
     }
