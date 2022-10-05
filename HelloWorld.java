@@ -17,8 +17,10 @@ public class HelloWorld {
             System.out.println("It's your turn blue.");
             int columnDrop = retrieveColumn(scanny);
             System.out.println("Dropping your piece in column #" + columnDrop);
+            displayGameBoard(row1);
             if (columnDrop == 3){
                winnerFound = true;
+               continue;
             }
             player = !player;
          }
@@ -26,8 +28,10 @@ public class HelloWorld {
             System.out.println("It's your turn red.");
             int columnDrop = retrieveColumn(scanny);
             System.out.println("Dropping your piece in column #" + columnDrop);
+            displayGameBoard(row1);
             if (columnDrop == 3){
                winnerFound = true;
+               continue;
             }
             player = !player;
          }
