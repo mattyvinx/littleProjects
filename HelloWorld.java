@@ -12,27 +12,34 @@ public class HelloWorld {
        initBoard(row1);
        System.out.println("\nWelcome to Conenct 4! First to get 4 in a row wins :D\n\n");
        displayGameBoard(row1);
+       row1[2][4] = "B"; //makes bottom column (4) and 4th row (3) a letter B for blue.
+       displayGameBoard(row1);
        while(!winnerFound){
          if (player){
             System.out.println("It's your turn blue.");
             int columnDrop = retrieveColumn(scanny);
             System.out.println("Dropping your piece in column #" + columnDrop);
-            displayGameBoard(row1);
             if (columnDrop == 3){
                winnerFound = true;
                continue;
             }
+            int columnPlacement = findColHeight(columnDrop, row1);
+            placePiece(row1, columnDrop, columnPlacement, player);
+            displayGameBoard(row1);
             player = !player;
          }
          if (!player){
             System.out.println("It's your turn red.");
             int columnDrop = retrieveColumn(scanny);
             System.out.println("Dropping your piece in column #" + columnDrop);
-            displayGameBoard(row1);
+            
             if (columnDrop == 3){
                winnerFound = true;
                continue;
             }
+            int columnPlacement = findColHeight(columnDrop, row1);
+            placePiece(row1, columnDrop, columnPlacement, player);
+            displayGameBoard(row1);
             player = !player;
          }
       }
@@ -85,4 +92,39 @@ public class HelloWorld {
       }
       return retrieved;
     }
- }
+
+    public static int findColHeight(int col, String [][] gameBoard){
+      /*Gives the location of the height of the current heighest piece.*/
+      int heighestPiece = 0;
+      for(int i = 0; i<gameBoard.length; i++){
+         System.out.println("Checking row "+i+" of "+gameBoard.length);
+         if(gameBoard[i][col].equals("B") || gameBoard[i][col].equals("R")){
+            heighestPiece = i;
+            System.out.println("Found heightest piece to be "+ heighestPiece);
+            return heighestPiece;
+         }
+      }
+      heighestPiece = 5;
+      return heighestPiece;
+    }
+    public static void placePiece(String[][] gameBoard, int col, int height, boolean player){
+      /*Places current players piece where it would fall*/
+      //case where player has chosen a full column
+      String playerColor="B";
+      if (!player){
+         playerColor="R";
+      }
+      if(height == 0){
+         return;
+      }
+      //empty col case
+      else if (height == 5){
+         gameBoard[height-1][col]=playerColor;
+         return;
+      }
+      //non-full occupied column
+      else{
+         gameBoard[height-1][col]=playerColor;
+      }
+    }
+   }
