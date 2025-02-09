@@ -38,22 +38,29 @@ for i in range(50): ##for the top 50 rows, pulls coordinates. Coordinates then u
         populationTable.loc[i, 'Humidity'] = 'error'
         populationTable.loc[i, 'Wind Speed'] = 'error'
 
-
+##begin display of data
 latitudes = []
 longitudes =[]
 temperatures = []
+cities = []
+labels = []
 
 for i in range(50):
     latitudes.append(populationTable.iloc[i]["Latitude Decimal"].item())
     longitudes.append(populationTable.iloc[i]["Longitude Decimal"].item())
     temperatures.append(populationTable.iloc[i]["Temperature"].item())
+    cities.append(populationTable.iloc[i]['City'].item())
 
+labels = [f"{city}<br>Temperature: {pop:,}" for city, pop in zip(cities, temperatures)]
 
-fig = mapper.Figure(mapper.Scattergeo(
+mapDisplay = mapper.Figure(mapper.Scattergeo(
     locationmode='USA-states',
     lat=latitudes,
     lon=longitudes,
-    mode='markers+text',  # You can also use 'markers' for just the points
+    text=cities,
+    hovertext = labels,
+    hoverinfo = 'text',
+    mode='markers',
     marker=dict(
         size=8, 
         color=temperatures,
@@ -61,14 +68,14 @@ fig = mapper.Figure(mapper.Scattergeo(
         colorbar=dict(title='Temperature')),
 ))
 
-fig.update_layout(
+mapDisplay.update_layout(
     geo=dict(
         scope='usa',
         projection_type='albers usa',
         showland=True,
     )
 )
-fig.show()
+mapDisplay.show()
 
 
 
