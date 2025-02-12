@@ -58,6 +58,25 @@ for i in range(50): ##for the top 50 rows, pulls coordinates. Coordinates then u
         populationTable.loc[i, 'Refresh Time'] = datetime.now()
     else: ##errors added if issue calling API.
         populationTable.loc[i, 'Temperature'] = 'error'
+
+    ##pull in weather alerts, applicable
+    response = rq.get(f"https://api.weather.gov/points/{Lat},{Lon}") ##convert to NWS zone for current city
+    data = response.json()
+    if response.status_code==200:
+        forecastZoneURL = data["properties"]["forecastZone"]
+        forecastZone = forecastZoneURL.split("/")[-1] 
+        response = rq.get(f"https://api.weather.gov/alerts/active?zone={forecastZone}") ##convert to NWS zone for current city
+        data = response.json()
+        if response.status_code==200 and data['features']:
+            event = data["features"][0]["properties"]["event"]
+            severity = data["features"][0]["properties"]["severity"]
+            populationTable.loc[i, 'Weather Event'] = event
+            populationTable.loc[i, 'Event Severity'] = severity
+        else:
+            populationTable.loc[i, 'Weather Event'] = "No Ongoing Events"
+
+    else:
+        populationTable.loc[i, 'Alerts'] = "None"
 ''' ##pulling historical averages
     presentTime = datetime.now()
     presentMonth, presentDay, presentHour = presentTime.month, presentTime.day, presentTime.hour
