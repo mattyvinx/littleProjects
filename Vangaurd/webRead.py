@@ -4,7 +4,8 @@ import plotly.graph_objects as mapper
 from dotenv import load_dotenv
 import os
 from datetime import datetime
-import time
+
+
 
 load_dotenv()
 
@@ -15,9 +16,10 @@ South = ["WV", "MD", "DE", "DC", "VA", "WV", "KY", "TN", "NC", "SC", "GA", "FL",
 Midwest = ["ND", "MN", "WI", "MI", "SD", "IA", "IL", "IN", "OH", "NE", "MO", "KS"]
 West = ["WA", "ID", "MT", "OR", "WY", "CA", "NV", "UT", "CO", "AZ", "NM"]
 
-tablePop = pd.read_html('https://en.wikipedia.org/wiki/List_of_United_States_cities_by_population')
-populationTable = tablePop[2]
 
+tablePop = pd.read_html('https://en.wikipedia.org/wiki/List_of_United_States_cities_by_population')
+
+populationTable = tablePop[2]
 for i in range(50): ##for the top 50 rows, pulls coordinates. Coordinates then used to pull current weather information. 
     coordinate = populationTable.iloc[i]["Location"].item() ##reads coordinates from table for top 50 cities. 
     cleanedCoordinate = coordinate.replace("\ufeff", "").strip() ##strips extra characters from inital read
@@ -39,8 +41,9 @@ for i in range(50): ##for the top 50 rows, pulls coordinates. Coordinates then u
     elif populationTable.iloc[i]["ST"].item() in West:
         populationTable.loc[i, "Region"] = "West"
     
-
+    
     response = rq.get(f"http://api.openweathermap.org/data/2.5/weather?lat={Lat}&lon={Lon}&appid={apiKey}&units=imperial") ##call openweather API, get current weather.
+    
     data = response.json()
 
     if response.status_code == 200: ##store current weather attributes
@@ -59,9 +62,10 @@ for i in range(50): ##for the top 50 rows, pulls coordinates. Coordinates then u
     else: ##errors added if issue calling API.
         populationTable.loc[i, 'Temperature'] = 'error'
 
-    ##pull in weather alerts, applicable
+    ##pull in weather alerts, if present
     response = rq.get(f"https://api.weather.gov/points/{Lat},{Lon}") ##convert to NWS zone for current city
     data = response.json()
+   
     if response.status_code==200:
         forecastZoneURL = data["properties"]["forecastZone"]
         forecastZone = forecastZoneURL.split("/")[-1] 
@@ -74,9 +78,9 @@ for i in range(50): ##for the top 50 rows, pulls coordinates. Coordinates then u
             populationTable.loc[i, 'Event Severity'] = severity
         else:
             populationTable.loc[i, 'Weather Event'] = "No Ongoing Events"
-
     else:
         populationTable.loc[i, 'Alerts'] = "None"
+    print (f"Run is {i*2}% complete.", end = '\r', flush=True)
 ''' ##pulling historical averages
     presentTime = datetime.now()
     presentMonth, presentDay, presentHour = presentTime.month, presentTime.day, presentTime.hour
