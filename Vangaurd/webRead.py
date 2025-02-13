@@ -1,8 +1,8 @@
 import pandas as pd
 import requests as rq
 import plotly.graph_objects as mapper
-from dotenv import load_dotenv
-import os
+from dotenv import load_dotenv #used for loading API from .env file
+import os 
 from datetime import datetime
 
 
@@ -71,10 +71,10 @@ for i in range(50): ##for the top 50 rows, pulls coordinates. Coordinates then u
         forecastZone = forecastZoneURL.split("/")[-1] 
         response = rq.get(f"https://api.weather.gov/alerts/active?zone={forecastZone}") ##convert to NWS zone for current city
         data = response.json()
-        if response.status_code==200 and data['features']:
+        if response.status_code==200 and data['features']: #verify that alerts are active, and response received
             event = data["features"][0]["properties"]["event"]
             severity = data["features"][0]["properties"]["severity"]
-            populationTable.loc[i, 'Weather Event'] = event
+            populationTable.loc[i, 'Weather Event'] = event #store data for Tableau
             populationTable.loc[i, 'Event Severity'] = severity
         else:
             populationTable.loc[i, 'Weather Event'] = "No Ongoing Events"
@@ -82,55 +82,25 @@ for i in range(50): ##for the top 50 rows, pulls coordinates. Coordinates then u
     else:
         populationTable.loc[i, 'Alerts'] = "None"
         populationTable.loc[i, 'Event Severity'] = "N/A"
-    populationTable.loc[i, 'Refresh Time'] = datetime.now()
+    populationTable.loc[i, 'Refresh Time'] = datetime.now() #add refresh time for latest pull
     print (f"API Calls {i*2}% complete.", end = '\r', flush=True) ##display ongoing API progress
-''' ##pulling historical averages, currently inactive
-    presentTime = datetime.now()
-    presentMonth, presentDay, presentHour = presentTime.month, presentTime.day, presentTime.hour
-
-    years = [presentTime.year - i for i in range(1, 6)]
-    timeStampsUNIX = [int(time.mktime(datetime(year, presentMonth, presentDay, presentHour, 0).timetuple())) for year in years]
-
-    for tsu in timeStampsUNIX:
-        response = rq.get(f"https://api.openweathermap.org/data/3.0/onecall/timemachine?lat={Lat}&lon={Lon}&dt={tsu}&appid={apiKey}")
-        data = response.json()
-        avgTempL = []
-        if response.status_code == 200:
-            if "data" in data and len(data["data"]) > 0:
-                tempK = data['data'][0]['temp']
-                tempF = (tempK - 273.15) * 9/5 + 32
-                avgTempL.append(tempF)
-                avgTemp = 0
-                tempSum = 0
-                for temp in avgTempL:
-                    tempSum+=temp
-                avgTemp = tempSum/5
-                populationTable.loc[i, 'Average Temp Last 5'] = avgTemp
-            else:
-                print("Data not available for given time")
-                populationTable.loc[i, 'Average Temp Last 5'] = 'N/A'
-        else:
-            print("Response Error")
-            populationTable.loc[i, 'Average Temp Last 5'] = 'N/A'
-'''
-
 
 errorPresent = False #validate pull successful. If not, error will be displayed. 
 
 for i in range(50): #check to verify that all items have populated as expected
     if populationTable.loc[i, 'Temperature'].item() == 'error':
-        errorPresent = True
+        errorPresent = True #sets error check to true, stopping file from creation and map from creation
 
 if errorPresent == False:
-    populationTable[:50].to_excel('citiesWithWeather.xlsx') ##output file to be used by Tableau Dashboard
-    ##begin display of data
+    populationTable[:50].to_excel('citiesWithWeather.xlsx') ##output file to be used by Tableau Dashboard. Minor cleanup needed after.
+    ##begin display of data on map
     latitudes = []
     longitudes =[]
     temperatures = []
     cities = []
     labels = []
 
-    for i in range(50):
+    for i in range(50): #populate lists, used for map
         latitudes.append(populationTable.iloc[i]["Latitude Decimal"].item())
         longitudes.append(populationTable.iloc[i]["Longitude Decimal"].item())
         temperatures.append(populationTable.iloc[i]["Temperature"].item())
@@ -138,7 +108,7 @@ if errorPresent == False:
 
     labels = [f"{city}<br>Temperature: {temp:,}" for city, temp in zip(cities, temperatures)]
 
-    mapDisplay = mapper.Figure(mapper.Scattergeo(
+    mapDisplay = mapper.Figure(mapper.Scattergeo( #data appended to map
         locationmode='USA-states',
         lat=latitudes,
         lon=longitudes,
@@ -153,7 +123,7 @@ if errorPresent == False:
             colorbar=dict(title='Temperature')),
     ))
 
-    mapDisplay.update_layout(
+    mapDisplay.update_layout( #display updated
         geo=dict(
             scope='usa',
             projection_type='albers usa',
