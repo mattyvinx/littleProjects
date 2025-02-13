@@ -7,18 +7,20 @@ from datetime import datetime
 
 
 
-load_dotenv()
+load_dotenv() ##pulls API from .env file
 
 apiKey = os.getenv("apiKey")
 
+#city region assignment, used in dashboard
 Northeast = ["ME", "NH", "VT", "MA", "CT", "RI", "NJ", "NY", "PA"]
 South = ["WV", "MD", "DE", "DC", "VA", "WV", "KY", "TN", "NC", "SC", "GA", "FL", "MS", "AL", "AR", "OK", "LA", "TX"]
 Midwest = ["ND", "MN", "WI", "MI", "SD", "IA", "IL", "IN", "OH", "NE", "MO", "KS"]
 West = ["WA", "ID", "MT", "OR", "WY", "CA", "NV", "UT", "CO", "AZ", "NM"]
 
-
+#pull in from wikipedia
 tablePop = pd.read_html('https://en.wikipedia.org/wiki/List_of_United_States_cities_by_population')
 
+#store city table
 populationTable = tablePop[2]
 for i in range(50): ##for the top 50 rows, pulls coordinates. Coordinates then used to pull current weather information. 
     coordinate = populationTable.iloc[i]["Location"].item() ##reads coordinates from table for top 50 cities. 
@@ -32,7 +34,7 @@ for i in range(50): ##for the top 50 rows, pulls coordinates. Coordinates then u
     cityString = populationTable.iloc[i]["City"].item() #clears special marks from city names.
     cityStringCleaned = cityString.split("[")[0] 
     populationTable.loc[i, "City Plain Text"] = cityStringCleaned #stores cleaned names
-    if populationTable.iloc[i]["ST"].item() in Northeast:
+    if populationTable.iloc[i]["ST"].item() in Northeast: #region storage 
         populationTable.loc[i, "Region"] = "Northeast"
     elif populationTable.iloc[i]["ST"].item() in South:
         populationTable.loc[i, "Region"] = "South"
@@ -43,10 +45,9 @@ for i in range(50): ##for the top 50 rows, pulls coordinates. Coordinates then u
     
     
     response = rq.get(f"http://api.openweathermap.org/data/2.5/weather?lat={Lat}&lon={Lon}&appid={apiKey}&units=imperial") ##call openweather API, get current weather.
-    
     data = response.json()
 
-    if response.status_code == 200: ##store current weather attributes
+    if response.status_code == 200: ##store current weather attributes if call successful 
         temperature = data["main"]["temp"] 
         feelsLike = data["main"]["feels_like"]
         description = data["weather"][0]["description"]
@@ -58,7 +59,6 @@ for i in range(50): ##for the top 50 rows, pulls coordinates. Coordinates then u
         populationTable.loc[i, 'Description'] = description
         populationTable.loc[i, 'Humidity'] = humidity
         populationTable.loc[i, 'Wind Speed'] = wind_speed
-        populationTable.loc[i, 'Refresh Time'] = datetime.now()
     else: ##errors added if issue calling API.
         populationTable.loc[i, 'Temperature'] = 'error'
 
@@ -66,7 +66,7 @@ for i in range(50): ##for the top 50 rows, pulls coordinates. Coordinates then u
     response = rq.get(f"https://api.weather.gov/points/{Lat},{Lon}") ##convert to NWS zone for current city
     data = response.json()
    
-    if response.status_code==200:
+    if response.status_code==200: #if zone received, ask for alerts from NWS
         forecastZoneURL = data["properties"]["forecastZone"]
         forecastZone = forecastZoneURL.split("/")[-1] 
         response = rq.get(f"https://api.weather.gov/alerts/active?zone={forecastZone}") ##convert to NWS zone for current city
@@ -78,10 +78,13 @@ for i in range(50): ##for the top 50 rows, pulls coordinates. Coordinates then u
             populationTable.loc[i, 'Event Severity'] = severity
         else:
             populationTable.loc[i, 'Weather Event'] = "No Ongoing Events"
+            populationTable.loc[i, 'Event Severity'] = "N/A"
     else:
         populationTable.loc[i, 'Alerts'] = "None"
-    print (f"Run is {i*2}% complete.", end = '\r', flush=True)
-''' ##pulling historical averages
+        populationTable.loc[i, 'Event Severity'] = "N/A"
+    populationTable.loc[i, 'Refresh Time'] = datetime.now()
+    print (f"API Calls {i*2}% complete.", end = '\r', flush=True) ##display ongoing API progress
+''' ##pulling historical averages, currently inactive
     presentTime = datetime.now()
     presentMonth, presentDay, presentHour = presentTime.month, presentTime.day, presentTime.hour
 
@@ -114,12 +117,12 @@ for i in range(50): ##for the top 50 rows, pulls coordinates. Coordinates then u
 
 errorPresent = False #validate pull successful. If not, error will be displayed. 
 
-for i in range(50):
+for i in range(50): #check to verify that all items have populated as expected
     if populationTable.loc[i, 'Temperature'].item() == 'error':
         errorPresent = True
 
 if errorPresent == False:
-    populationTable.to_excel('citiesWithWeather.xlsx') ##output file to be used by Tableau
+    populationTable[:50].to_excel('citiesWithWeather.xlsx') ##output file to be used by Tableau Dashboard
     ##begin display of data
     latitudes = []
     longitudes =[]
@@ -133,7 +136,7 @@ if errorPresent == False:
         temperatures.append(populationTable.iloc[i]["Temperature"].item())
         cities.append(populationTable.iloc[i]["City Plain Text"].item())
 
-    labels = [f"{city}<br>Temperature: {pop:,}" for city, pop in zip(cities, temperatures)]
+    labels = [f"{city}<br>Temperature: {temp:,}" for city, temp in zip(cities, temperatures)]
 
     mapDisplay = mapper.Figure(mapper.Scattergeo(
         locationmode='USA-states',
@@ -156,7 +159,7 @@ if errorPresent == False:
             projection_type='albers usa',
             showland=True,
         ),
-        title="Current Temperatures in the top 50 Most Populated Cities",
+        title="Current Temperatures - Top 50 Most Populated Cities in the US",
     )
     mapDisplay.show()
 else:
